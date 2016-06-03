@@ -275,6 +275,47 @@ var sanitizeMethods = function (methods) {
       child.is = method.is;
     }
 
+    method.__METADATA__ && delete method.__METADATA__;
+
+    if (method.body) {
+      method.body['application/json'] && delete method.body['application/json'].name;
+      method.body['application/json'] && delete method.body['application/json'].schemaContent;
+      method.body['application/x-www-form-urlencoded'] && delete method.body['application/x-www-form-urlencoded'].name;
+      method.body['application/x-www-form-urlencoded'] && delete method.body['application/x-www-form-urlencoded'].schemaContent;
+      method.body['multipart/form-data'] && delete method.body['multipart/form-data'].name;
+      method.body['multipart/form-data'] && delete method.body['multipart/form-data'].schemaContent;
+      method.body['application/xml'] && delete method.body['application/xml'].name;
+      method.body['application/xml'] && delete method.body['application/xml'].schemaContent;
+      method.body['text/xml'] && delete method.body['text/xml'].name;
+      method.body['text/xml'] && delete method.body['text/xml'].schemaContent;
+      method.body['"*/*"'] && delete method.body['"*/*"'].name;
+      method.body['"*/*"'] && delete method.body['"*/*"'].schemaContent;
+
+      if (method.body['application/x-www-form-urlencoded']) {
+        if (method.body['application/x-www-form-urlencoded'].formParameters) {
+          for (var prop in method.body['application/x-www-form-urlencoded'].formParameters) {
+            for (var subprop in method.body['application/x-www-form-urlencoded'].formParameters[prop]) {
+              if (subprop !== 'displayName' || subprop !== 'type' || subprop !== 'required') {
+                delete method.body['application/x-www-form-urlencoded'].formParameters[prop][subprop];
+              }
+            }
+          }
+        }
+      }
+
+      if (method.body['multipart/form-data']) {
+        if (method.body['multipart/form-data'].formParameters) {
+          for (var prop in method.body['multipart/form-data'].formParameters) {
+            for (var subprop in method.body['multipart/form-data'].formParameters[prop]) {
+              if (subprop !== 'displayName' || subprop !== 'type' || subprop !== 'required') {
+                delete method.body['multipart/form-data'].formParameters[prop][subprop];
+              }
+            }
+          }
+        }
+      }
+    }
+
     extend(child, sanitizeTrait(method));
   });
 
@@ -338,6 +379,25 @@ module.exports = function (responses) {
   Object.keys(responses).forEach(function (code) {
     if (!/^\d{3}$/.test(code)) {
       return;
+    }
+
+    if (responses[code]) {
+      responses[code].code && delete responses[code].code;
+    }
+
+    if (responses[code].body) {
+      responses[code].body['application/json'] && delete responses[code].body['application/json'].name;
+      responses[code].body['application/json'] && delete responses[code].body['application/json'].schemaContent;
+      responses[code].body['application/x-www-form-urlencoded'] && delete responses[code].body['application/x-www-form-urlencoded'].name;
+      responses[code].body['application/x-www-form-urlencoded'] && delete responses[code].body['application/x-www-form-urlencoded'].schemaContent;
+      responses[code].body['multipart/form-data'] && delete responses[code].body['multipart/form-data'].name;
+      responses[code].body['multipart/form-data'] && delete responses[code].body['multipart/form-data'].schemaContent;
+      responses[code].body['application/xml'] && delete responses[code].body['application/xml'].name;
+      responses[code].body['application/xml'] && delete responses[code].body['application/xml'].schemaContent;
+      responses[code].body['text/xml'] && delete responses[code].body['text/xml'].name;
+      responses[code].body['text/xml'] && delete responses[code].body['text/xml'].schemaContent;
+      responses[code].body['"*/*"'] && delete responses[code].body['"*/*"'].name;
+      responses[code].body['"*/*"'] && delete responses[code].body['"*/*"'].schemaContent;
     }
 
     obj[code] = responses[code];
@@ -1079,6 +1139,13 @@ module.exports = Number.isNaN || function (x) {
 'use strict';
 
 /**
+ * Results cache
+ */
+
+var res = '';
+var cache;
+
+/**
  * Expose `repeat`
  */
 
@@ -1107,6 +1174,7 @@ function repeat(str, num) {
     throw new TypeError('repeat-string expects a string.');
   }
 
+  // cover common, quick use cases
   if (num === 1) return str;
   if (num === 2) return str + str;
 
@@ -1129,12 +1197,6 @@ function repeat(str, num) {
   return res.substr(0, max);
 }
 
-/**
- * Results cache
- */
-
-var res = '';
-var cache;
 
 },{}],19:[function(require,module,exports){
 'use strict';
@@ -1163,12 +1225,14 @@ module.exports = function () {
 },{}],22:[function(require,module,exports){
 module.exports = extend
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
 function extend(target) {
     for (var i = 1; i < arguments.length; i++) {
         var source = arguments[i]
 
         for (var key in source) {
-            if (source.hasOwnProperty(key)) {
+            if (hasOwnProperty.call(source, key)) {
                 target[key] = source[key]
             }
         }
